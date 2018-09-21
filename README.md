@@ -1,4 +1,4 @@
-Данные к докладу на [CryptoInstallFest 5 (22 сентября 2018)](https://cryptofest.ru/).
+Данные к [докладу](https://slides.ooni.io/2018/cif/) на [CryptoInstallFest 5 (22 сентября 2018)](https://cryptofest.ru/).
 
 tl;dr
 =====
