@@ -1,0 +1,71 @@
+---
+- hosts: all
+  tasks:
+  - name: set hostname
+    command: hostnamectl set-hostname {{ inventory_hostname }}
+    notify: reboot
+    when: ansible_nodename == 'localhost'
+
+  - meta: flush_handlers
+
+  - name: install packages
+    apt:
+      name: '{{ item }}'
+      state: latest
+      update_cache: yes
+      cache_valid_time: 28800
+      install_recommends: false
+    with_items:
+    - tmux
+    - dante-server
+    - haproxy
+    - ssl-cert
+    - nginx-light
+
+  - name: create ssl-cert-snakeoil_haproxy.pem
+    shell: cat ../certs/ssl-cert-snakeoil.pem ssl-cert-snakeoil.key >ssl-cert-snakeoil_haproxy.pem
+    args:
+      chdir: /etc/ssl/private
+      creates: /etc/ssl/private/ssl-cert-snakeoil_haproxy.pem
+
+  - name: template danted.conf
+    template: src=danted.conf dest=/etc/danted.conf owner=root group=root mode=0444
+    tags: danted
+    notify: restart danted
+
+  - name: template haproxy.cfg
+    template: src=haproxy.cfg dest=/etc/haproxy/haproxy.cfg owner=root group=root mode=0444
+    tags: haproxy
+    notify: restart haproxy
+
+  - name: enable and start services
+    service:
+      name: '{{ item }}'
+      state: started
+      enabled: yes
+    with_items:
+    - danted
+    - haproxy
+
+  - name: copy evil-detect script
+    copy: src=evil-detect dest=/usr/local/sbin/evil-detect mode=0550 owner=root group=root
+    tags: evil
+
+  - name: copy evil-detect crontab
+    copy: src=evil-detect.cron dest=/etc/cron.d/evil-detect mode=0444 owner=root group=root
+    tags: evil
+
+  handlers:
+  - name: reboot
+    command: reboot
+
+  - name: restart haproxy
+    service:
+      name: haproxy
+      state: restarted
+
+  - name: restart danted
+    service:
+      name: danted
+      state: restarted
+...

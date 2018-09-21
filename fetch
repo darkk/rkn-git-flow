@@ -1,0 +1,29 @@
+#!/bin/bash
+
+f="$1"
+
+case "$f" in
+    s5tg-02-repeat-*) msm="16226108" ;;
+    s5tg-02-tail-*) msm="16232577" ;;
+    s5tg-03-repeat-*) msm="16226112" ;;
+    s5tg-03-tail-*) msm="16232503" ;;
+    s5tg-04-repeat-*) msm="16232679" ;;
+    s5tg-04-tail-*) msm="16251837" ;;
+    s5tg-05-repeat-*) msm="16237376" ;;
+    s5tg-05-tail-*) msm="16251876" ;;
+    *)
+        echo "Bad fname: $f" 1>&2
+        exit 1
+        ;;
+esac
+
+case "$f" in
+    s5tg-*-20.jsonl) ts="start=1537401600&stop=1537487999" ;;
+    s5tg-*-21.jsonl) ts="start=1537488000&stop=1537574399" ;;
+    *)
+        echo "Bad fname: $f" 1>&2
+        exit 1
+        ;;
+esac
+
+exec wget -O "$f" "https://atlas.ripe.net/api/v2/measurements/${msm}/results/?${ts}&format=txt"
