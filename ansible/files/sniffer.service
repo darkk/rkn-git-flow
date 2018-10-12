@@ -1,0 +1,13 @@
+[Unit]
+Description=Good sniffer
+
+[Service]
+User=root
+Group=root
+# NB % has to be escaped, see https://www.freedesktop.org/software/systemd/man/systemd.unit.html#Specifiers
+ExecStart=/usr/sbin/tcpdump -w /var/local/%H.%%Y-%%m-%%dT%%H-%%M-%%S_%%s.pcap -B 4096 -i any -G 600 -z gzip 'not tcp port 22 and not host 37.218.245.43'
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

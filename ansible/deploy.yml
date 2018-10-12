@@ -38,6 +38,15 @@
     tags: haproxy
     notify: restart haproxy
 
+  - name: Install node_exporter systemd service file
+    notify:
+    - restart sniffer
+    - systemctl daemon-reload
+    copy:
+      src: sniffer.service
+      dest: /etc/systemd/system/sniffer.service
+      mode: 0444
+
   - name: enable and start services
     service:
       name: '{{ item }}'
@@ -46,9 +55,10 @@
     with_items:
     - danted
     - haproxy
+    - sniffer
 
   - name: copy evil-detect script
-    copy: src=evil-detect dest=/usr/local/sbin/evil-detect mode=0550 owner=root group=root
+    template: src=evil-detect dest=/usr/local/sbin/evil-detect mode=0550 owner=root group=root
     tags: evil
 
   - name: copy evil-detect crontab
@@ -59,6 +69,9 @@
   - name: reboot
     command: reboot
 
+  - name: systemctl daemon-reload
+    command: systemctl daemon-reload
+
   - name: restart haproxy
     service:
       name: haproxy
@@ -68,4 +81,10 @@
     service:
       name: danted
       state: restarted
+
+  - name: restart sniffer
+    service:
+      name: sniffer
+      state: restarted
+...
 ...

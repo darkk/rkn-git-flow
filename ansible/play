@@ -1,0 +1,46 @@
+#!/bin/sh
+
+LOGS_DIR=$PWD/log
+
+# use tmpfs when on Linux, FIXME: add relevant clause for Darwin as well
+if [ -d "/run/user/$(id -u)" ]; then
+    TMPDIR="/run/user/$(id -u)"
+    export TMPDIR
+fi
+
+mkdir -p "$LOGS_DIR"
+
+cmd=$(basename "$0")
+case "$cmd" in
+  play)
+    binary=ansible-playbook
+    ;;
+  ansible)
+    binary=ansible
+    ;;
+  *)
+    echo "Unknown command in argv0: $0" 1>&2
+    exit 1
+    ;;
+esac
+
+if [ -t 0 -a -t 1 -a -t 2 ]; then
+  uname=`uname -s`
+  if [ "$uname" = Linux ]; then
+    if [ -z "$BASH_VERSION" ]; then
+      exec bash "$0" "$@"
+    else
+      # I need some internal bash `printf` supporting %q, also filename limit of 255 chars should be enforced.
+      name=$(echo "$cmd" "$@" | sed 's/[^-+=a-zA-Z0-9_]/_/g; s/__*/_/g; s/^\(.\{200\}\).*/\1.../').$(date +%Y.%m.%d.%H.%M.%S).$$.$(tput cols)x$(tput lines)
+      args=$(printf "%q " "$@")
+      exec /usr/bin/script --append --return --timing="$LOGS_DIR/${name}.timing" -c "$binary --inventory-file ./inventory $args" "$LOGS_DIR/${name}.log"
+    fi
+  elif [ "$uname" = Darwin ]; then
+    name=`echo "$cmd" "$@" | sed s/[^-+=a-zA-Z0-9_]/_/g`.`date +%Y.%m.%d.%H.%M.%S`.$$.log
+    exec script -a "$LOGS_DIR/$name" "$binary" --inventory-file ./inventory "$@"
+  else
+    echo "$0: don't know how to launch \`script\` at $uname." 1>&2
+    # fall-through
+  fi
+fi
+exec "$binary" --inventory-file ./inventory "$@"

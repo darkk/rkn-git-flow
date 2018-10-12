@@ -1,0 +1,7 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+  - name: show t.me URL
+    debug:
+      msg: "https://t.me/socks?server={{ ipv4 }}&port={{ ha_port }}"

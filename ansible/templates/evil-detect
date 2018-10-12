@@ -1,0 +1,124 @@
+#!/bin/bash -e
+
+instance=$(hostname)
+port={{ ha_port }}
+read s5_syn_pkt s5_nmap_pkt s5_tg_pkt s5_noauth_pkt s5_tls_pkt < <(
+    iptables -L -vn | awk '
+    / s5_syn_pkt / { s5_syn_pkt = $1; }
+    / s5_nmap_pkt / { s5_nmap_pkt = $1; }
+    / s5_tg_pkt / { s5_tg_pkt = $1; }
+    / s5_noauth_pkt / { s5_noauth_pkt = $1; }
+    / s5_tls_pkt / { s5_tls_pkt = $1; }
+    END { print s5_syn_pkt, s5_nmap_pkt, s5_tg_pkt, s5_noauth_pkt, s5_tls_pkt }
+    '
+)
+
+if [ -n "$s5_syn_pkt" -a -n "$s5_nmap_pkt" -a -n "$s5_tg_pkt" -a -n "$s5_noauth_pkt" -a -n "$s5_tls_pkt" ]; then
+  curl -X PUT --data-binary @- \
+  --cert <(cat <<EOF
+-----BEGIN CERTIFICATE-----
+MIIDAjCCAeoCEAbrZF0i94SoGPxYhIfwbfwwDQYJKoZIhvcNAQELBQAwOzENMAsG
+A1UECgwET09OSTELMAkGA1UECwwCQ0ExHTAbBgNVBAMMFFByb21ldGhldXMgUHVz
+aGVyIENBMB4XDTE4MTAxMTExNDQ0NloXDTI4MTAwODExNDQ0NlowRDENMAsGA1UE
+CgwET09OSTEaMBgGA1UECwwRUHJvbWV0aGV1cyBQdXNoZXIxFzAVBgNVBAMMDmRh
+cmtrIHM1dGcgcHQyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAogSj
+YU6gqnP+CLLwZgmBPfi/Tbj6TaRQHAh8eKyZrNjnA98TgGLVGgk7Ix5zIVJVXHXe
+z2nfTMh0jL2o87rGidFDZ4QjllAiKGngyklIdOLibZlh5YH7uutYecnLX0qDPyCJ
+3xpsyqMH0X52JjFxsd5AyZw4O6tBHD8ij6RYPmrwK2NUiOvUCYEFQZXqMEyYhFxO
+GNnL2hvftR3Sx1wo4xQalRsDSV0dSH4fmNkLhG76wp4bZDAi8f/F4u49VRpuqpqB
+5413zFz6LYGCTKa37O+yxnTFoc6SRnwrDzzvgRD2RXwQ/bZJe7lpus6/vnJx3zEI
+9/UZmTO9zCN92xXhRwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQBVHefWKUR9KrB6
+mKSu0JJYxD9g1VSSZMautHvB5W6nePgzxZT38dsCA6VlUl/5YyMxHijMpxfIPHI2
++cvZCyjVypi0Ac3/X0Hn9A1w3WKiCpBloUw5TyC9R8Vi1D7cXG9yaMmvJ+BLcmaK
+lC8cmQ+WO7pmvEsmV5BSavdzPx8+WvfKONc4VwJMvWAhk7DSiVAlT5O7y2K4ZIyF
+wjEttzoERWY0P5btnBY8IDQqkq4iEDNryoR7T/ErG4aOIZj9qDcsYHk0tGmmopUA
+Vgu+yGS2tdL9ioLMZ0VfT33pilT5QbbEt8RrtwirRvSqmExNrRr+64mS9m3EgQNJ
+G0IeqHdC
+-----END CERTIFICATE-----
+EOF
+) \
+  --key <(cat <<EOF
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAogSjYU6gqnP+CLLwZgmBPfi/Tbj6TaRQHAh8eKyZrNjnA98T
+gGLVGgk7Ix5zIVJVXHXez2nfTMh0jL2o87rGidFDZ4QjllAiKGngyklIdOLibZlh
+5YH7uutYecnLX0qDPyCJ3xpsyqMH0X52JjFxsd5AyZw4O6tBHD8ij6RYPmrwK2NU
+iOvUCYEFQZXqMEyYhFxOGNnL2hvftR3Sx1wo4xQalRsDSV0dSH4fmNkLhG76wp4b
+ZDAi8f/F4u49VRpuqpqB5413zFz6LYGCTKa37O+yxnTFoc6SRnwrDzzvgRD2RXwQ
+/bZJe7lpus6/vnJx3zEI9/UZmTO9zCN92xXhRwIDAQABAoIBAAdjqMPuXxuHEMX6
+y0YMFu3po2f7EMdrwA+XP34NeTDN77NYgD4xw8BdPWo7oEqbw7Lk2VWiYYHR/qbQ
+m50KHrX4aleVSj43x2cKdSskrn5OPr966GEcTYvX4gAj+PeOoW/GnyMixGV1jAy8
+9MyHIsVW+qN3UYU/KUgNhRkCCNhH27URC+vmU7WGO2BMVK6drZdy8a3GzVvmgbh1
+KGZOWNNLUgHyFQfpo+xiGl8lJjg3462lt0EeLk3yqADV5vWunjHdDxJSKjqodESC
+hTHZVaz+fI3NH+ksjY0/Q8BppDPcAplZyhGRZNbqT6VkXygeYAvJY+K8Tb1FkGpX
+Ssby4+ECgYEA1bJPe6DcyGRzBjYucy3FkTgfG/m6ss/8IWJ2w5VujykuvdSBx3e6
+O7UvNyEHt8o1juHHzBy82lE6c8C1Lrh+YRRuNkhf4f53a5826iBjwHZYuGg6NrRP
++UBsrYlkVVJEpQ/LJ0u0E+6+defhymF830OYFg8CxxOoAuy4+ZDNwxECgYEAwhdf
+/SPRwWa1XBkMFLD11qOjnn1K2h08IAywaDqDuqU+ETBGaieRmCxxh9YoDn4tGNcK
+In/wuI7ftFQ/wU7K07vAINnpcsonxMYQ5LXEE/SmFzTjesZmTCEkC7mhDNJdyvgp
+ubPEghfNQRpwjSyF39kODpAzHeKIaqEXAB2aLtcCgYEApil7Ekc3xX4NzoOsxJSP
+reZ0kh0xpb6BbzgP3u6/xAOiu6qUqxQWtDyjFPvS838A/DPlVnn2As/sYnsypryA
+UF5BgGXwYFqsYvuvCIfc6JddTy6ELWsxUD9fAeT2Jj3M8IgCUHDV+jXG1QlUETiS
+j0wQ4v4TC9bl6jhFcJC+3fECgYEAot7gotjzBJs+pzkxhQ92TJZnD/FN5bhQowhi
+5CPuNKrDacMb46qup4bsAjP4yyigiU6yZ377LrReDsH/+iQ3WfQcZrTWDIiNVLds
+p6/MCX7r/V9ZYMaqQ0owKFKuTcceA9u5j+bFiPGWQQKB3kW1VcGb5SambnaRSQFC
+/srYfmMCgYEAgAvk1cj2pvBMpQEgtZRsLs7T8DIiY78bzWa+QwPdBqGC5o9+pO4b
+yyKeW/pMWSqJxsRxDcIv08TwJmNt1X9RU4qzdcK/4SMZ4vxXcgT8LQB2EB4X3qSD
+jbpvWyrZTgWpDZSrGyMae6ME+aw3nwarN4ewPgtK1mcaRHSrGrGEHOA=
+-----END RSA PRIVATE KEY-----
+EOF
+) \
+  "https://prometheus.infra.ooni.io:9091/metrics/job/evil/instance/${instance}" \
+  <<EOF
+# HELP s5_syn_pkt Number of SYNs.
+# TYPE s5_syn_pkt counter
+s5_syn_pkt ${s5_syn_pkt}
+# HELP s5_nmap_pkt Number of SYNs from nmap.
+# TYPE s5_nmap_pkt counter
+s5_nmap_pkt ${s5_nmap_pkt}
+# HELP s5_tg_pkt Number of socks5 handshakes with two auth methods.
+# TYPE s5_tg_pkt counter
+s5_tg_pkt ${s5_tg_pkt}
+# HELP s5_noauth_pkt Number of no-auth socks5 handshakes.
+# TYPE s5_noauth_pkt counter
+s5_noauth_pkt ${s5_noauth_pkt}
+# HELP s5_tls_pkt Number of TLS handshakes.
+# TYPE s5_tls_pkt counter
+s5_tls_pkt ${s5_tls_pkt}
+EOF
+else
+    # BPF filters are used to match Socks5 handshake as it's the easy way to
+    # match TCP payload while respecting TCP options.
+    # Here is nice generator for libpcap rules: https://www.wireshark.org/tools/string-cf.html
+
+    # TCP options are NOT matched with BPF but are matched with iptables chain
+    # as xt_bpf limits number of BPF opcodes with 64 (XT_BPF_MAX_NUM_INSTR), so
+    # it's tricky to check all needed options with single rule. xt_osf is
+    # another nice option for alike fingerprinting, but it's not used here.
+
+    # Socks5 handshake TG Client (33 opcodes) -- 05 02 00 02
+    # 'tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x05020002 && (ip[2:2] - ((ip[0:1] & 0x0f) << 2) - ((tcp[12:1] & 0xf0) >> 2)) == 4'
+
+    # Socks5 handshake no auth (42 opcodes) -- 05 01 00
+    # 'tcp[((tcp[12:1] & 0xf0) >> 2):2] = 0x0501 && tcp[((tcp[12:1] & 0xf0) >> 2) + 2:1] = 0x00 && (ip[2:2] - ((ip[0:1] & 0x0f) << 2) - ((tcp[12:1] & 0xf0) >> 2)) == 3'
+
+    # RIPE Atlas TLS (63 opcodes) -- 16 03 00 {segment_len - 5} 01 00 # without ${segment_len - 5 - 4} ${word_tls_ver}
+    # '(tcp[((tcp[12:1] & 0xf0) >> 2):4] & 0xFFFFFC00) = 0x16030000 && ((ip[2:2] - ((ip[0:1] & 0x0f) << 2) - ((tcp[12:1] & 0xf0) >> 2)) - 5 == tcp[((tcp[12:1] & 0xf0) >> 2) + 3:2]) && tcp[((tcp[12:1] & 0xf0) >> 2) + 5:2] = 0x0100'
+
+    # Compile with $(nfbpf_compile RAW pcap-expr)
+
+    iptables -N S5SYN || iptables -F S5SYN
+    iptables -A S5SYN -j LOG -m comment --comment 's5_syn_pkt' --log-prefix 'SYN-all: ' --log-tcp-options --log-ip-options
+    iptables -A S5SYN -p tcp -m comment --tcp-option 4 -j RETURN --comment 'has-sack'
+    iptables -A S5SYN -p tcp -m comment --tcp-option 3 -j RETURN --comment 'has-wscale'
+    iptables -A S5SYN -p tcp -m comment --tcp-option 8 -j RETURN --comment 'has-timestamp'
+    iptables -A S5SYN -j LOG -m comment --comment 's5_nmap_pkt' --log-prefix 'SYN-nmap: ' --log-tcp-options --log-ip-options
+
+    iptables -N S5TG || iptables -F S5TG
+    iptables -A S5TG -p tcp --syn -j S5SYN
+    iptables -A S5TG -j LOG --log-prefix 'S5-tg: ' -m comment --comment 's5_tg_pkt' -m bpf --bytecode '34,48 0 0 0,84 0 0 240,21 0 30 64,48 0 0 9,21 0 28 6,40 0 0 6,69 26 0 8191,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,12 0 0 0,7 0 0 0,64 0 0 0,21 0 18 84017154,40 0 0 2,2 0 0 6,48 0 0 0,84 0 0 15,100 0 0 2,7 0 0 10,96 0 0 6,28 0 0 0,2 0 0 10,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,7 0 0 14,96 0 0 10,28 0 0 0,21 0 1 4,6 0 0 65535,6 0 0 0'
+    iptables -A S5TG -j LOG --log-prefix 'S5-noauth: ' -m comment --comment 's5_noauth_pkt' -m bpf --bytecode '43,48 0 0 0,84 0 0 240,21 0 39 64,48 0 0 9,21 0 37 6,40 0 0 6,69 35 0 8191,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,12 0 0 0,7 0 0 0,72 0 0 0,21 0 27 1281,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,4 0 0 2,12 0 0 0,7 0 0 0,80 0 0 0,21 0 18 0,40 0 0 2,2 0 0 12,48 0 0 0,84 0 0 15,100 0 0 2,7 0 0 0,96 0 0 12,28 0 0 0,2 0 0 0,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,7 0 0 4,96 0 0 0,28 0 0 0,21 0 1 3,6 0 0 65535,6 0 0 0'
+    iptables -A S5TG -j LOG --log-prefix 'TLS: '  -m comment --comment 's5_tls_pkt' -m bpf --bytecode '56,48 0 0 0,84 0 0 240,21 0 52 64,48 0 0 9,21 0 50 6,40 0 0 6,69 48 0 8191,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,12 0 0 0,7 0 0 0,64 0 0 0,84 0 0 4294966272,21 0 39 369295360,40 0 0 2,2 0 0 7,48 0 0 0,84 0 0 15,100 0 0 2,7 0 0 11,96 0 0 7,28 0 0 0,2 0 0 11,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,7 0 0 15,96 0 0 11,28 0 0 0,20 0 0 5,2 0 0 0,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,4 0 0 3,12 0 0 0,7 0 0 0,72 0 0 0,7 0 0 6,96 0 0 0,29 0 10 0,177 0 0 0,80 0 0 12,84 0 0 240,116 0 0 2,4 0 0 5,12 0 0 0,7 0 0 0,72 0 0 0,21 0 1 256,6 0 0 65535,6 0 0 0'
+
+    iptables -F INPUT
+    iptables -A INPUT -p tcp --dport $port -j S5TG
+fi
