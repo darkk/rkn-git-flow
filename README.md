@@ -50,15 +50,15 @@ tl;dr
 - 00:52 наблюдается блокировка на МГТС
 - 01:38 в выгрузке с `updateTime="2018-09-20T01:38:00+03:00"` ещё нет блокировки
 - 01:57 блэкхол на [looking glass Beeline](lg/beeline-2018-09-20-02-00-02.png)
-- 03:07 в выгрузке с `updateTime="2018-09-20T03:07:00+03:00"` всё ещё нет блокировки
-- 03:30 `<ip ts="2018-09-20T03:30:00+03:00">45.56.118.171</ip>`
+- 03:07 в "предыдущей" выгрузке с `updateTime="2018-09-20T03:07:00+03:00"` всё ещё нет блокировки
+- 03:30 `<ip ts="2018-09-20T03:30:00+03:00">45.56.118.171</ip>` &mdash; первая известная выгрузка с блокировкой данного IP
 
 Графики по другим эксприментам с данными RIPE Atlas:
 
-- [s5tg-02](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-02.ipynb)
-- [s5tg-03](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-03.ipynb)
-- [s5tg-04](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-04.ipynb)
-- [s5tg-05](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-05.ipynb)
+- [s5tg-02](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-02.ipynb), "предыдущая" выгрузка отстоит от `ts` на 4 минуты
+- [s5tg-03](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-03.ipynb), &mdash;&quot;&mdash; на 4 минуты
+- [s5tg-04](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-04.ipynb), &mdash;&quot;&mdash; на 5 минут
+- [s5tg-05](https://nbviewer.jupyter.org/github/darkk/rkn-git-flow/blob/master/atlas-vis-05.ipynb), &mdash;&quot;&mdash; на 11 минут
 
 Спасибо
 =======
